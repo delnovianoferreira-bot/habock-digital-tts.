@@ -20,7 +20,10 @@ st.set_page_config(
 URL_DATA             = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_ZOXOlq8tAN3z3zMMMbh1JFS-Sl9LecCVE7gNAoDm_IF0oFDuredZXbtO_rAPF54hlzyervBGwvuq/pub?output=csv"
 URL_BOKASHI_PRODUKSI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_ZOXOlq8tAN3z3zMMMbh1JFS-Sl9LecCVE7gNAoDm_IF0oFDuredZXbtO_rAPF54hlzyervBGwvuq/pub?gid=538980514&single=true&output=csv"
 URL_BOKASHI_KATALOG  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_ZOXOlq8tAN3z3zMMMbh1JFS-Sl9LecCVE7gNAoDm_IF0oFDuredZXbtO_rAPF54hlzyervBGwvuq/pub?gid=1511411011&single=true&output=csv"
-URL_MASTER           = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_ZOXOlq8tAN3z3zMMMbh1JFS-Sl9LecCVE7gNAoDm_IF0oFDuredZXbtO_rAPF54hlzyervBGwvuq/pub?gid=YOUR_MASTER_GID&single=true&output=csv"
+
+# ⚠️ GANTI "YOUR_MASTER_GID" dengan GID sheet Master Data Anda
+# Cara cari GID: buka sheet, lihat URL → ...#gid=ANGKA_INI
+URL_MASTER = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_ZOXOlq8tAN3z3zMMMbh1JFS-Sl9LecCVE7gNAoDm_IF0oFDuredZXbtO_rAPF54hlzyervBGwvuq/pub?gid=YOUR_MASTER_GID&single=true&output=csv"
 
 # ── KOORDINAT FALLBACK 32 TPS ─────────────────────────────────
 TPS_FALLBACK = [
@@ -58,10 +61,42 @@ TPS_FALLBACK = [
     {"id":"32","nama":"Rumah Bokashi DLH", "kel":"Kota Soe",     "lat":-9.8631,"lng":124.2691},
 ]
 
+# ── HELPER: bersihkan angka format Indonesia (1.000 atau 1,000) ──
+def parse_angka_indonesia(s):
+    """
+    Konversi string angka format Indonesia ke float.
+    Contoh: "5.000" → 5000, "1.500,50" → 1500.50, "Rp 5.000" → 5000
+    """
+    s = str(s).strip()
+    s = s.replace("Rp", "").replace(" ", "")
+    # Jika ada koma sebagai desimal (mis. "1.500,50") → hapus titik, ganti koma jadi titik
+    if "," in s and "." in s:
+        s = s.replace(".", "").replace(",", ".")
+    # Jika hanya titik sebagai ribuan (mis. "5.000") → hapus titik
+    elif "." in s and "," not in s:
+        # Pastikan bukan desimal: jika ada ≥2 digit setelah titik terakhir → ribuan
+        bagian = s.split(".")
+        if len(bagian[-1]) == 3:  # format ribuan: X.XXX
+            s = s.replace(".", "")
+        # else biarkan sebagai desimal
+    # Jika hanya koma sebagai ribuan (mis. "5,000") → hapus koma
+    elif "," in s and "." not in s:
+        bagian = s.split(",")
+        if len(bagian[-1]) == 3:
+            s = s.replace(",", "")
+        else:
+            s = s.replace(",", ".")
+    try:
+        return float(s)
+    except:
+        return 0.0
+
 @st.cache_data(ttl=60)
 def load_data():
-    try: return pd.read_csv(URL_DATA)
-    except: return pd.DataFrame()
+    try:
+        return pd.read_csv(URL_DATA)
+    except:
+        return pd.DataFrame()
 
 @st.cache_data(ttl=60)
 def load_master():
@@ -73,38 +108,70 @@ def load_master():
             df["Longitude"] = pd.to_numeric(df["Longitude"], errors="coerce")
             df = df.dropna(subset=["Latitude","Longitude"])
         return df
-    except: return pd.DataFrame()
+    except:
+        return pd.DataFrame()
 
 @st.cache_data(ttl=60)
 def load_bokashi_produksi():
+    """
+    PERBAIKAN UTAMA:
+    1. Filter baris kosong lebih ketat (hanya baris dengan Tanggal DAN Bahan Baku)
+    2. Gunakan parse_angka_indonesia() yang benar untuk format ribuan pakai titik
+    3. Tidak menghapus titik secara buta (menghindari 5.000 → 5 atau 5000 salah)
+    """
     try:
         df = pd.read_csv(URL_BOKASHI_PRODUKSI, skiprows=2)
         df.columns = df.columns.str.strip()
+
+        # Hanya ambil baris yang punya tanggal valid DD/MM/YYYY
         df = df.dropna(subset=["Tanggal"])
-        df = df[df["Tanggal"].astype(str).str.match(r'\d{2}/\d{2}/\d{4}')]
+        df = df[df["Tanggal"].astype(str).str.match(r'^\d{2}/\d{2}/\d{4}$')]
+
+        # Parse tanggal
         df["Tanggal"] = pd.to_datetime(df["Tanggal"], format="%d/%m/%Y", errors="coerce")
-        for col in ["Bahan Baku Masuk (kg)","Pupuk Diproduksi (kg)","Pupuk Terjual (kg)",
-                    "Harga/kg","Total Pendapatan","Stok Tersisa"]:
+
+        # Hapus baris yang Bahan Baku Masuk kosong atau 0 (baris dummy sheet)
+        if "Bahan Baku Masuk (kg)" in df.columns:
+            df["Bahan Baku Masuk (kg)"] = df["Bahan Baku Masuk (kg)"].apply(parse_angka_indonesia)
+            df = df[df["Bahan Baku Masuk (kg)"] > 0]
+
+        # Konversi kolom numerik lain dengan parse yang benar
+        kolom_numerik = [
+            "Pupuk Diproduksi (kg)",
+            "Pupuk Terjual (kg)",
+            "Harga/kg",
+            "Total Pendapatan",
+            "Stok Tersisa",
+        ]
+        for col in kolom_numerik:
             if col in df.columns:
-                df[col] = pd.to_numeric(
-                    df[col].astype(str).str.replace(",","").str.replace(".",""),
-                    errors="coerce").fillna(0)
+                df[col] = df[col].apply(parse_angka_indonesia)
+
+        df = df.reset_index(drop=True)
         return df
-    except: return pd.DataFrame()
+    except Exception as e:
+        return pd.DataFrame()
 
 @st.cache_data(ttl=60)
 def load_bokashi_katalog():
+    """
+    PERBAIKAN: parse harga dengan benar (format "Rp 2.000" → 2000)
+    """
     try:
         df = pd.read_csv(URL_BOKASHI_KATALOG, skiprows=2)
         df.columns = df.columns.str.strip()
-        return df[df.iloc[:,0].astype(str).str.startswith("BOK-")]
-    except: return pd.DataFrame()
+        # Ambil hanya baris produk (mulai BOK-)
+        df = df[df.iloc[:, 0].astype(str).str.startswith("BOK-")]
+        return df.reset_index(drop=True)
+    except:
+        return pd.DataFrame()
 
 def get_img(target):
     files = os.listdir(".")
     img = next((f for f in files if target.lower() in f.lower()), None)
     if img:
-        with open(img,'rb') as f: return base64.b64encode(f.read()).decode()
+        with open(img, 'rb') as f:
+            return base64.b64encode(f.read()).decode()
     return ""
 
 logo_pemda = get_img("pemda")
@@ -161,7 +228,7 @@ def render_peta_gis(height=420, show_stats=True):
     else:
         for t in TPS_FALLBACK:
             k = t["id"].lstrip("0")
-            titik.append({**t, "status": status_dict.get(k,"Selesai")})
+            titik.append({**t, "status": status_dict.get(k, "Selesai")})
 
     if show_stats:
         cnt = {"Selesai":0,"Sedang Proses":0,"Belum Proses":0,"Menunggu":0}
@@ -275,7 +342,7 @@ def render_peta_gis(height=420, show_stats=True):
     if not use_sheets:
         st.caption("📌 Koordinat masih estimasi. Isi kolom Latitude & Longitude di sheet HABOCK Master Data.")
 
-# CSS
+# ── CSS ───────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -478,7 +545,7 @@ div[data-testid="stToolbar"]{display:none!important;}
 </style>
 """, unsafe_allow_html=True)
 
-# TICKER
+# ── TICKER ────────────────────────────────────────────────────
 now_dt  = datetime.now()
 now_str = now_dt.strftime("%d %b %Y · %H:%M WITA")
 
@@ -517,7 +584,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# TOPBAR
+# ── TOPBAR ────────────────────────────────────────────────────
 gform    = "https://docs.google.com/forms/d/e/1FAIpQLSejAQXpYJh_v9QZeAaoyqy66puWQutFnV7V6Ux9od-uMWr0UQ/viewform"
 appsheet = "https://www.appsheet.com/start/YOUR_APPSHEET_ID"
 
@@ -546,7 +613,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# STATUS BAR
+# ── STATUS BAR ────────────────────────────────────────────────
 jam = now_dt.hour
 if 3 <= jam < 7:    sst="active"; slbl="Shift Subuh Aktif · 03.00–07.00"
 elif 7 <= jam < 16: sst="warn";   slbl="Jam Kantor · 07.00–16.00"
@@ -570,7 +637,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# HERO
+# ── HERO ──────────────────────────────────────────────────────
 st.markdown(f"""
 <div class="hero">
   {'<div class="hero-bg-img" style="background-image:url(\'data:image/jpeg;base64,' + bg_kantor + '\');"></div><div class="hero-bg-overlay"></div>' if bg_kantor else ''}
@@ -596,16 +663,20 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# TABS
+# ── TABS ──────────────────────────────────────────────────────
 tab_home, tab_stats, tab_map, tab_logs, tab_bokashi = st.tabs([
     "🏠 Beranda","📊 Statistik","📍 Peta GIS","📜 Log","🌿 Bokashi"
 ])
 
-# BERANDA
+wa_number = "6281326024674"
+wa_pesan  = urllib.parse.quote("Halo, saya ingin memesan pupuk bokashi DLH Kab. TTS. Terima kasih 🙏")
+
+# ── BERANDA ───────────────────────────────────────────────────
 with tab_home:
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
 
     df_prod    = load_bokashi_produksi()
+    # PERBAIKAN: gunakan nilai yang sudah bersih dari parse_angka_indonesia
     total_pad  = int(df_prod["Total Pendapatan"].sum())      if not df_prod.empty and "Total Pendapatan"      in df_prod.columns else 0
     total_prod = int(df_prod["Pupuk Diproduksi (kg)"].sum()) if not df_prod.empty and "Pupuk Diproduksi (kg)" in df_prod.columns else 0
     total_jual = int(df_prod["Pupuk Terjual (kg)"].sum())    if not df_prod.empty and "Pupuk Terjual (kg)"    in df_prod.columns else 0
@@ -682,10 +753,7 @@ with tab_home:
     </div>
     """, unsafe_allow_html=True)
 
-    wa_number = "6281326024674"
-    wa_pesan  = urllib.parse.quote("Halo, saya ingin memesan pupuk bokashi DLH Kab. TTS. Terima kasih 🙏")
-    wa_link   = f"https://wa.me/{wa_number}?text={wa_pesan}"
-
+    wa_link = f"https://wa.me/{wa_number}?text={wa_pesan}"
     st.markdown(f"""
     <div class="qr-section">
       <p class="qr-title">Scan QR Code — Akses Cepat</p>
@@ -715,7 +783,7 @@ with tab_home:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# STATISTIK
+# ── STATISTIK ─────────────────────────────────────────────────
 with tab_stats:
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     df = load_data()
@@ -748,13 +816,13 @@ with tab_stats:
         st.info("⏳ Menghubungkan ke database...")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# PETA GIS
+# ── PETA GIS ──────────────────────────────────────────────────
 with tab_map:
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     render_peta_gis(height=560, show_stats=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# LOG
+# ── LOG ───────────────────────────────────────────────────────
 with tab_logs:
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown('<div class="panel">', unsafe_allow_html=True)
@@ -767,7 +835,7 @@ with tab_logs:
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# BOKASHI
+# ── BOKASHI ───────────────────────────────────────────────────
 with tab_bokashi:
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     df_prod2    = load_bokashi_produksi()
@@ -776,7 +844,11 @@ with tab_bokashi:
     tp2  = int(df_prod2["Pupuk Diproduksi (kg)"].sum()) if not df_prod2.empty and "Pupuk Diproduksi (kg)" in df_prod2.columns else 0
     tj2  = int(df_prod2["Pupuk Terjual (kg)"].sum())    if not df_prod2.empty and "Pupuk Terjual (kg)"    in df_prod2.columns else 0
     pad2 = int(df_prod2["Total Pendapatan"].sum())       if not df_prod2.empty and "Total Pendapatan"      in df_prod2.columns else 0
-    stk2 = int(df_prod2["Stok Tersisa"].iloc[-1])        if not df_prod2.empty and "Stok Tersisa" in df_prod2.columns and len(df_prod2)>0 else 0
+    # PERBAIKAN: ambil stok dari baris terakhir yang valid (non-zero)
+    stk2 = 0
+    if not df_prod2.empty and "Stok Tersisa" in df_prod2.columns:
+        stok_valid = df_prod2[df_prod2["Stok Tersisa"] > 0]["Stok Tersisa"]
+        stk2 = int(stok_valid.iloc[-1]) if not stok_valid.empty else 0
 
     st.markdown(f"""
     <div class="stats-grid">
@@ -791,16 +863,21 @@ with tab_bokashi:
     st.markdown('<div class="ph"><div class="ph-dot"></div><h3 class="ph-title">Grafik Produksi & Penjualan</h3></div>', unsafe_allow_html=True)
     if not df_prod2.empty and "Tanggal" in df_prod2.columns:
         df_c = df_prod2[["Tanggal","Pupuk Diproduksi (kg)","Pupuk Terjual (kg)"]].dropna()
-        df_m = df_c.melt(id_vars="Tanggal", var_name="Keterangan", value_name="kg")
-        fig  = px.bar(df_m, x="Tanggal", y="kg", color="Keterangan", barmode="group",
-            color_discrete_map={"Pupuk Diproduksi (kg)":"#1f8433","Pupuk Terjual (kg)":"#d4880a"},
-            height=240)
-        fig.update_layout(plot_bgcolor='white', paper_bgcolor='white',
-            margin=dict(t=10,b=10,l=0,r=0),
-            legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,font=dict(size=10)),
-            xaxis=dict(title=""), yaxis=dict(title="kg", gridcolor="#f5f5f5"))
-        fig.update_traces(marker_line_width=0)
-        st.plotly_chart(fig, use_container_width=True)
+        # Hanya tampilkan baris yang ada produksinya
+        df_c = df_c[df_c["Pupuk Diproduksi (kg)"] > 0]
+        if not df_c.empty:
+            df_m = df_c.melt(id_vars="Tanggal", var_name="Keterangan", value_name="kg")
+            fig  = px.bar(df_m, x="Tanggal", y="kg", color="Keterangan", barmode="group",
+                color_discrete_map={"Pupuk Diproduksi (kg)":"#1f8433","Pupuk Terjual (kg)":"#d4880a"},
+                height=240)
+            fig.update_layout(plot_bgcolor='white', paper_bgcolor='white',
+                margin=dict(t=10,b=10,l=0,r=0),
+                legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1,font=dict(size=10)),
+                xaxis=dict(title=""), yaxis=dict(title="kg", gridcolor="#f5f5f5"))
+            fig.update_traces(marker_line_width=0)
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("⏳ Data produksi belum tersedia.")
     else:
         st.info("⏳ Data belum tersedia.")
     st.markdown('</div>', unsafe_allow_html=True)
@@ -808,27 +885,34 @@ with tab_bokashi:
     st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="ph"><div class="ph-dot"></div><h3 class="ph-title">Katalog Produk</h3><span class="ph-sub">Rumah Bokashi DLH TTS</span></div>', unsafe_allow_html=True)
 
+    # PERBAIKAN: parse harga katalog dengan benar (handle "Rp 2.000" format)
     katalog_data = []
     if not df_katalog2.empty:
         for _, row in df_katalog2.iterrows():
             try:
-                kode=str(row.iloc[0]); nama=str(row.iloc[1]); kemasan=str(row.iloc[2])
-                harga=int(float(str(row.iloc[3]).replace(",","").replace(".","")))
-                try: sv=int(float(str(row.iloc[4]).replace(",","")))
-                except: sv=1
-                katalog_data.append((kode,nama,kemasan,harga,sv))
-            except: pass
+                kode   = str(row.iloc[0]).strip()
+                nama   = str(row.iloc[1]).strip()
+                kemasan = str(row.iloc[2]).strip()
+                harga  = int(parse_angka_indonesia(row.iloc[3]))
+                try:
+                    sv = int(parse_angka_indonesia(row.iloc[4]))
+                except:
+                    sv = 1
+                if kode.startswith("BOK-") and harga > 0:
+                    katalog_data.append((kode, nama, kemasan, harga, sv))
+            except:
+                pass
 
     if not katalog_data:
-        katalog_data=[
+        katalog_data = [
             ("BOK-001","Pupuk Bokashi Curah","Per kg",5000,100),
             ("BOK-002","Bokashi Kemasan 5 kg","5 kg / sak",25000,50),
             ("BOK-003","Bokashi Kemasan 10 kg","10 kg / sak",48000,30),
             ("BOK-004","Bokashi Kemasan 25 kg","25 kg / karung",115000,15),
         ]
 
-    for kode,nama,kemasan,harga,sv in katalog_data:
-        badge='<span class="b-ok">✅ Ada</span>' if sv>0 else '<span class="b-no">⚠️ Habis</span>'
+    for kode, nama, kemasan, harga, sv in katalog_data:
+        badge = '<span class="b-ok">✅ Ada</span>' if sv > 0 else '<span class="b-no">⚠️ Habis</span>'
         st.markdown(f"""
         <div class="prod-card">
           <div>
@@ -866,7 +950,7 @@ with tab_bokashi:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# FOOTER
+# ── FOOTER ────────────────────────────────────────────────────
 st.markdown(f"""
 <div class="footer">
   <div class="footer-brand">
