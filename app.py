@@ -17,11 +17,11 @@ st.set_page_config(
 )
 
 # ── URL DATA ──────────────────────────────────────────────────
-URL_DATA             = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_ZOXOlq8tAN3z3zMMMbh1JFS-Sl9LecCVE7gNAoDm_IF0oFDuredZXbtO_rAPF54hlzyervBGwvuq/pub?output=csv"
-URL_BOKASHI_PRODUKSI = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_ZOXOlq8tAN3z3zMMMbh1JFS-Sl9LecCVE7gNAoDm_IF0oFDuredZXbtO_rAPF54hlzyervBGwvuq/pub?gid=538980514&single=true&output=csv"
-URL_BOKASHI_KATALOG  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_ZOXOlq8tAN3z3zMMMbh1JFS-Sl9LecCVE7gNAoDm_IF0oFDuredZXbtO_rAPF54hlzyervBGwvuq/pub?gid=1511411011&single=true&output=csv"
-URL_MASTER           = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT_ZOXOlq8tAN3z3zMMMbh1JFS-Sl9LecCVE7gNAoDm_IF0oFDuredZXbtO_rAPF54hlzyervBGwvuq/pub?gid=YOUR_MASTER_GID&single=true&output=csv"
-
+SHEET_ID = "1zyZ7cDh_5M5K-VCNt_sQllmrsoPVGtbC6aJ9DSfL1NE"
+URL_DATA             = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=0" # Ganti gid=0 jika data utama bukan di tab pertama
+URL_BOKASHI_PRODUKSI = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=538980514"
+URL_BOKASHI_KATALOG  = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=1511411011"
+URL_MASTER           = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=YOUR_MASTER_GID" # Ganti YOUR_MASTER_GID dengan angka GID tab master kamu
 # ── KOORDINAT FALLBACK 32 TPS ─────────────────────────────────
 TPS_FALLBACK = [
     {"id":"01","nama":"Pasar Inpres",      "kel":"Kota Soe",     "lat":-9.8618,"lng":124.2834},
