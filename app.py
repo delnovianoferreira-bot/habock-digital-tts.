@@ -682,7 +682,7 @@ with tab_home:
     </div>
     """, unsafe_allow_html=True)
 
-    wa_number = "6282196444851"
+    wa_number = "6281326024674"
     wa_pesan  = urllib.parse.quote("Halo, saya ingin memesan pupuk bokashi DLH Kab. TTS. Terima kasih 🙏")
     wa_link   = f"https://wa.me/{wa_number}?text={wa_pesan}"
 
@@ -849,7 +849,7 @@ with tab_bokashi:
       <div class="ostep"><div class="onum">4</div><div>Ambil di Rumah Bokashi, Kota Soe</div></div>
       <div class="ostep"><div class="onum">5</div><div>Pengiriman tersedia untuk pembelian ≥ 50 kg</div></div>
       <div class="oloc">📍 Rumah Bokashi DLH Kab. TTS · Kota Soe · TTS</div>
-      <a href="{wa_link2}" target="_blank" class="btn-wa">💬 Pesan via WhatsApp — 0821-9644-4851</a>
+      <a href="{wa_link2}" target="_blank" class="btn-wa">💬 Pesan via WhatsApp — 0813-2602-4674</a>
     </div>
     <div class="panel" style="margin-top:12px;">
       <div class="ph"><div class="ph-dot"></div><h3 class="ph-title">Manfaat Pupuk Bokashi</h3></div>
@@ -875,9 +875,9 @@ st.markdown(f"""
   </div>
   <div class="footer-col">
     <h4>Kontak DLH</h4>
-    <p>📞 (0388) 21xxx — Kantor DLH</p>
-    <p>📱 0821-9644-4851 — Rumah Bokashi</p>
-    <p>📧 dlh@tts.go.id</p>
+    <p>📞 (0388) 21476 — Kantor DLH</p>
+    <p>📱 0813-2602-4674 — Rumah Bokashi</p>
+    <p>📧 kabttsdlh@gmail.com</p>
     <p>⏰ Senin–Jumat, 08.00–16.00 WITA</p>
   </div>
   <div class="footer-col">
