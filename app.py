@@ -542,7 +542,7 @@ wa_pesan  = urllib.parse.quote("Halo, saya ingin memesan pupuk bokashi DLH Kab. 
 with tab_home:
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
 
-   df_prod = load_bokashi_produksi()
+    df_prod = load_bokashi_produksi()
     total_pad  = int(df_prod["Total Pendapatan"].sum())      if not df_prod.empty and "Total Pendapatan"      in df_prod.columns else 0
     total_prod = int(df_prod["Pupuk Diproduksi (kg)"].sum()) if not df_prod.empty and "Pupuk Diproduksi (kg)" in df_prod.columns else 0
     total_jual = int(df_prod["Pupuk Terjual (kg)"].sum())    if not df_prod.empty and "Pupuk Terjual (kg)"    in df_prod.columns else 0
@@ -568,7 +568,6 @@ with tab_home:
       </div>
     </div>
     ''', unsafe_allow_html=True)
-
     # ── SAMBUTAN KADIS ──
     st.markdown(f'''
     <div class="sambutan-wrap">
