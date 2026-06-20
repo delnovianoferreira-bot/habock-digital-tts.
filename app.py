@@ -523,11 +523,10 @@ st.markdown(f'''
       <a href="{appsheet}" target="_blank" class="btn-s">👮 Portal Petugas</a>
     </div>
   </div>
-  <div class="kpi-strip">
-    <div class="kpi"><span class="kpi-val">32</span><span class="kpi-lbl">Titik TPS</span></div>
-    <div class="kpi"><span class="kpi-val">6</span><span class="kpi-lbl">Operator</span></div>
-    <div class="kpi"><span class="kpi-val" style="color:var(--g-light);">03:00</span><span class="kpi-lbl">Jam Operasional</span></div>
-    <div class="kpi"><span class="kpi-val" style="color:var(--g-light);">30 Jt</span><span class="kpi-lbl">Target PAD</span></div>
+  <div class="kpi-strip"><div class="kpi">
+<span class="kpi-val" style="color:var(--g-light);">32</span>
+<span class="kpi-lbl">TPS Terdata</span>
+</div>
   </div>
 </div>
 ''', unsafe_allow_html=True)
