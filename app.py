@@ -520,13 +520,7 @@ st.markdown(f'''
     <p class="hero-sub">Sistem terpadu pengawasan TPS real-time, absensi petugas GPS, pengaduan publik digital, dan ekonomi sirkular pupuk bokashi Kabupaten Timor Tengah Selatan.</p>
     <div class="hero-btns">
       <a href="{gform}" target="_blank" class="btn-p">📩 Lapor Sampah</a>
-      <a href="{appsheet}" target="_blank" class="btn-s">👮 Portal Petugas</a>
     </div>
-  </div>
-  <div class="kpi-strip"><div class="kpi">
-<span class="kpi-val" style="color:var(--g-light);">32</span>
-<span class="kpi-lbl">TPS Terdata</span>
-</div>
   </div>
 </div>
 ''', unsafe_allow_html=True)
