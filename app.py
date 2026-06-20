@@ -749,11 +749,10 @@ with tab_bokashi:
     if not df_prod2.empty and "Stok Tersisa" in df_prod2.columns:
         sv=df_prod2[df_prod2["Stok Tersisa"]>0]["Stok Tersisa"]
         stk2=int(sv.iloc[-1]) if not sv.empty else 0
-    st.markdown(f'''<div class="stats-grid">
+    st.markdown(f'''<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
       <div class="stat-card"><div class="sc-bar g"></div><div class="sc-ico">🌾</div><div class="sc-val">{tp2:,}</div><div class="sc-lbl">kg Diproduksi</div></div>
       <div class="stat-card"><div class="sc-bar r"></div><div class="sc-ico">🛒</div><div class="sc-val">{tj2:,}</div><div class="sc-lbl">kg Terjual</div></div>
       <div class="stat-card"><div class="sc-bar n"></div><div class="sc-ico">📦</div><div class="sc-val">{stk2:,}</div><div class="sc-lbl">kg Stok</div></div>
-      <div class="stat-card"><div class="sc-bar a"></div><div class="sc-ico">💰</div><div class="sc-val">{pad2//1000}rb</div><div class="sc-lbl">Total PAD</div></div>
     </div>''', unsafe_allow_html=True)
     st.markdown('<div class="panel">', unsafe_allow_html=True)
     st.markdown('<div class="ph"><div class="ph-dot"></div><h3 class="ph-title">Grafik Produksi & Penjualan</h3></div>', unsafe_allow_html=True)
