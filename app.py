@@ -542,31 +542,29 @@ wa_pesan  = urllib.parse.quote("Halo, saya ingin memesan pupuk bokashi DLH Kab. 
 with tab_home:
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
 
-    df_prod = load_bokashi_produksi()
+   df_prod = load_bokashi_produksi()
     total_pad  = int(df_prod["Total Pendapatan"].sum())      if not df_prod.empty and "Total Pendapatan"      in df_prod.columns else 0
     total_prod = int(df_prod["Pupuk Diproduksi (kg)"].sum()) if not df_prod.empty and "Pupuk Diproduksi (kg)" in df_prod.columns else 0
     total_jual = int(df_prod["Pupuk Terjual (kg)"].sum())    if not df_prod.empty and "Pupuk Terjual (kg)"    in df_prod.columns else 0
-    pct = min(int(total_pad/30_000_000*100),100)
-    r=50; circ=2*3.14159*r; dv=circ*pct/100; dg=circ-dv
 
     st.markdown(f'''
     <div class="ring-section">
-      <div class="ring-wrap">
-        <svg width="120" height="120" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="{r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/>
-          <circle cx="60" cy="60" r="{r}" fill="none" stroke="#c8960a" stroke-width="12"
-            stroke-dasharray="{dv:.1f} {dg:.1f}" stroke-linecap="round" transform="rotate(-90 60 60)"/>
-        </svg>
-        <div class="ring-label"><span class="ring-pct">{pct}%</span><span class="ring-sub">target</span></div>
+      <div class="ring-wrap" style="display:flex;align-items:center;justify-content:center;width:120px;height:120px;">
+        <div style="font-size:3.6em;line-height:1;">🌿</div>
       </div>
       <div class="ring-info">
-        <p class="ring-title">Progress PAD Bokashi 2026</p>
-        <p class="ring-desc">Realisasi PAD Rumah Bokashi DLH TTS terhadap target Rp 30 juta/tahun.</p>
+        <p class="ring-title">Pupuk Bokashi DLH TTS</p>
+        <p class="ring-desc">Pupuk organik hasil olahan sampah Kota Soe — tersedia untuk dibeli masyarakat &amp; petani Kab. TTS.</p>
         <div class="ring-stats">
-          <div class="rs-item"><span class="rs-val">Rp {total_pad:,.0f}</span><span class="rs-lbl">Realisasi</span></div>
+          <div class="rs-item"><span class="rs-val">Rp {total_pad:,.0f}</span><span class="rs-lbl">Total Penjualan</span></div>
           <div class="rs-item"><span class="rs-val">{total_prod:,} kg</span><span class="rs-lbl">Produksi</span></div>
           <div class="rs-item"><span class="rs-val">{total_jual:,} kg</span><span class="rs-lbl">Terjual</span></div>
         </div>
+        <a href="https://wa.me/{wa_number}?text={wa_pesan}" target="_blank"
+           style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:#25D366;color:#fff;
+           text-decoration:none;padding:8px 16px;border-radius:30px;font-weight:700;font-size:.78em;">
+           💬 Pesan Pupuk Sekarang
+        </a>
       </div>
     </div>
     ''', unsafe_allow_html=True)
