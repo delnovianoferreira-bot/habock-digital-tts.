@@ -141,8 +141,9 @@ st.write("MASTER SHAPE:", df_master.shape)
 st.write("MASTER KOLOM:", list(df_master.columns))
 
 status_dict = {}
-    if not df_main.empty:
-        for col_k in ["Kode TPS","ID TPS","TPS","Lokasi"]:
+
+if not df_main.empty:
+    for col_k in ["Kode TPS","ID TPS","TPS","Lokasi"]:
             if col_k in df_main.columns and "Status" in df_main.columns:
                 for _,row in df_main.iterrows():
                     k = str(row.get(col_k,"")).strip().lstrip("TPS-").lstrip("0")
