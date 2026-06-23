@@ -143,7 +143,7 @@ def render_peta_gis(height=420, show_stats=True):
     map_key = f"habock_map_{_map_counter['n']}"
     WARNA = {"Selesai":"#22c55e","Sedang Proses":"#f59e0b","Belum Proses":"#ef4444","Menunggu":"#60a5fa"}
     BG_PILL = {"Selesai":("#d4f7dc","#1a5c24"),"Sedang Proses":("#fef3c7","#92400e"),"Belum Proses":("#fee2e2","#991b1b"),"Menunggu":("#e0f2fe","#075985")}
-    df_main = load_data()
+    df_main = pd.read_csv(URL_DATA)
 df_master = load_master()
 
 st.write("MASTER SHAPE:", df_master.shape)
@@ -445,7 +445,7 @@ div[data-testid="stToolbar"]{ display:none!important; }
 # ── TICKER ──
 now_dt  = datetime.now()
 now_str = now_dt.strftime("%d %b %Y · %H:%M WITA")
-df_main = load_data()
+df_main = pd.read_csv(URL_DATA)
 ticker_items = []
 if not df_main.empty and 'Lokasi' in df_main.columns:
     for _,row in df_main.tail(8).iterrows():
