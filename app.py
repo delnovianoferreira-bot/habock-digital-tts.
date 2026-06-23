@@ -134,10 +134,13 @@ def render_peta_gis(height=420, show_stats=True):
     map_key = f"habock_map_{_map_counter['n']}"
     WARNA = {"Selesai":"#22c55e","Sedang Proses":"#f59e0b","Belum Proses":"#ef4444","Menunggu":"#60a5fa"}
     BG_PILL = {"Selesai":("#d4f7dc","#1a5c24"),"Sedang Proses":("#fef3c7","#92400e"),"Belum Proses":("#fee2e2","#991b1b"),"Menunggu":("#e0f2fe","#075985")}
-    df_main = load_data(); df_master = load_master()
-    st.write("MASTER SHAPE:", df_master.shape)
+    df_main = load_data()
+df_master = load_master()
+
+st.write("MASTER SHAPE:", df_master.shape)
 st.write("MASTER KOLOM:", list(df_master.columns))
-    status_dict = {}
+
+status_dict = {}
     if not df_main.empty:
         for col_k in ["Kode TPS","ID TPS","TPS","Lokasi"]:
             if col_k in df_main.columns and "Status" in df_main.columns:
