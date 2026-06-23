@@ -87,8 +87,22 @@ def load_master():
         df.columns = df.columns.str.strip()
 
         if "Latitude" in df.columns and "Longitude" in df.columns:
+
+            df["Latitude"] = (
+                df["Latitude"]
+                .astype(str)
+                .str.replace(",", ".", regex=False)
+            )
+
+            df["Longitude"] = (
+                df["Longitude"]
+                .astype(str)
+                .str.replace(",", ".", regex=False)
+            )
+
             df["Latitude"] = pd.to_numeric(df["Latitude"], errors="coerce")
             df["Longitude"] = pd.to_numeric(df["Longitude"], errors="coerce")
+
             df = df.dropna(subset=["Latitude", "Longitude"])
 
         return df
