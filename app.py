@@ -84,10 +84,6 @@ def load_data():
 def load_master():
     try:
         df = pd.read_csv(URL_MASTER, header=2)
-
-        st.write("MASTER SHAPE:", df.shape)
-        st.write("MASTER KOLOM:", list(df.columns))
-
         df.columns = df.columns.str.strip()
 
         if "Latitude" in df.columns and "Longitude" in df.columns:
