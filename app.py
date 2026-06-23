@@ -83,14 +83,23 @@ def load_data():
 @st.cache_data(ttl=60)
 def load_master():
     try:
-        df = pd.read_csv(URL_MASTER)
+        df = pd.read_csv(URL_MASTER, header=2)
+
+        st.write("MASTER SHAPE:", df.shape)
+        st.write("MASTER KOLOM:", list(df.columns))
+
         df.columns = df.columns.str.strip()
+
         if "Latitude" in df.columns and "Longitude" in df.columns:
-            df["Latitude"]  = pd.to_numeric(df["Latitude"],  errors="coerce")
+            df["Latitude"] = pd.to_numeric(df["Latitude"], errors="coerce")
             df["Longitude"] = pd.to_numeric(df["Longitude"], errors="coerce")
-            df = df.dropna(subset=["Latitude","Longitude"])
+            df = df.dropna(subset=["Latitude", "Longitude"])
+
         return df
-    except: return pd.DataFrame()
+
+    except Exception as e:
+        st.error(f"LOAD MASTER ERROR: {e}")
+        return pd.DataFrame()
 
 @st.cache_data(ttl=60)
 def load_bokashi_produksi():
