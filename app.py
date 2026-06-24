@@ -153,7 +153,7 @@ def render_peta_gis(height=420, show_stats=True):
     map_key = f"habock_map_{_map_counter['n']}"
     WARNA = {"Selesai":"#22c55e","Sedang Proses":"#f59e0b","Belum Proses":"#ef4444","Menunggu":"#60a5fa"}
     BG_PILL = {"Selesai":("#d4f7dc","#1a5c24"),"Sedang Proses":("#fef3c7","#92400e"),"Belum Proses":("#fee2e2","#991b1b"),"Menunggu":("#e0f2fe","#075985")}
-        df_main = pd.read_csv(URL_DATA)
+    df_main = pd.read_csv(URL_DATA)
     df_master = load_master()
 
     st.write("MASTER SHAPE:", df_master.shape)
